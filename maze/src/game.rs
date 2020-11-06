@@ -17,7 +17,7 @@ impl MazeGame {
     pub fn new(grid_size: i32, window: &AppWindow) -> MazeGame {
         let maze = MazeGrid::new(grid_size);
         let (buffer_width, buffer_height) = window.size();
-        let cell_size = 10;
+        let cell_size = 15;
         let input = WinitInputHelper::new();
         MazeGame {
             maze,
@@ -64,8 +64,29 @@ impl MazeGame {
     }
 
     fn render_grid(&mut self, window: &mut AppWindow) {
-        let (width, _) = window.size();
+        let (width, height) = window.size();
+        let padding = 1;
         let framebuffer = window.framebuffer();
-        // ToDo Render grid here
+        for maze_y in 0..self.maze.size() {
+            for maze_x in 0..self.maze.size() {
+                if let Some(cell) = self.maze.cell_at(maze_x, maze_y) {
+                    let color = cell.color();
+                    let start_x = self.camera_pos.x + maze_x * (self.cell_size + padding);
+                    let start_y = self.camera_pos.y + maze_y * (self.cell_size + padding);
+                    for y in start_y..(start_y + self.cell_size) {
+                        for x in start_x..(start_x + self.cell_size) {
+                            if x < 0 || x >= width as i32 || y < 0 || y >= height as i32 {
+                                continue;
+                            }
+                            let pixel_index = (y * width as i32 * 4 + x * 4) as usize;
+                            framebuffer[pixel_index] = color.r();
+                            framebuffer[pixel_index + 1] = color.g();
+                            framebuffer[pixel_index + 2] = color.b();
+                            framebuffer[pixel_index + 3] = color.a();
+                        }
+                    }
+                }
+            }
+        }
     }
 }

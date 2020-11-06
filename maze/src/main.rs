@@ -10,5 +10,5 @@ use pixels::Error;
 
 pub fn main() -> Result<(), Error> {
     env_logger::init();
-    App::build().run("Maze Craze", 1280, 720, 64)
+    App::build().run("Maze Craze", 1280, 720, 32)
 }
