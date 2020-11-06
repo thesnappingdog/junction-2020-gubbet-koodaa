@@ -30,7 +30,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
 
     <script>
-        const socket = io("http://localhost:8080");
+        const socket = io("http://0.0.0.0:8080");
   
         function sendMsg() {
             socket.emit("message", "HELLO WORLD");
@@ -71,10 +71,7 @@
 </head>
 
 <body>
-    <h1><a href="https://github.com/muaz-khan/RecordRTC">RecordRTC</a> <a href="https://github.com/muaz-khan/RecordRTC/tree/master/RecordRTC-over-Socketio">over Socket.io</a>
-    </h1>
-
-    <button onClick="sendMsg()">Hit Meeee</button>
+    <button onClick="sendMsg()">Send HELLO WORLD</button>
 
     <p>
         <video id="camera-preview" style="border: 1px solid rgb(15, 158, 238); width: 94%;"></video>
