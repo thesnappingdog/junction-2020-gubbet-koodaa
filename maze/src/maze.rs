@@ -14,7 +14,7 @@ impl Cell {
         Cell {
             pos: Vector2D::<f32, f32>::new(x as f32, y as f32),
             color: Color::new(255, 255, 0, 0),
-            available_directions: vec![Direction::Up, Direction::Right, Direction::Down, Direction::Left],
+            available_directions: vec![],
         }
     }
     pub fn color(&self) -> Color {
