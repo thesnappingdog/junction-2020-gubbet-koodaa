@@ -1,6 +1,7 @@
-use euclid::Vector2D;
-use raqote::Color;
 use crate::direction::Direction;
+use euclid::Vector2D;
+use rand;
+use raqote::Color;
 
 #[derive(Debug, Clone)]
 pub struct Cell {
@@ -13,7 +14,7 @@ impl Cell {
     pub fn new(x: i32, y: i32) -> Cell {
         Cell {
             pos: Vector2D::<f32, f32>::new(x as f32, y as f32),
-            color: Color::new(255, 255, 0, 0),
+            color: Color::new(255, 100, 100, 100),
             available_directions: vec![],
         }
     }
@@ -46,10 +47,7 @@ impl MazeGrid {
             }
             grid.push(row);
         }
-        MazeGrid {
-            grid,
-            size,
-        }
+        MazeGrid { grid, size }
     }
 
     pub fn cell_at(&self, x: i32, y: i32) -> Option<&Cell> {
