@@ -1,10 +1,9 @@
-from flask import Flask
+from flask import Flask, send_from_directory, send_file
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return "Hello Kenobi"
-
+    return send_file("index.html")
 
 if __name__ == '__main__':
     app.run(ssl_context='adhoc')
