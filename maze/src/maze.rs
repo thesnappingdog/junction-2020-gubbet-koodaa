@@ -1,9 +1,11 @@
 use euclid::Vector2D;
 use raqote::Color;
+use crate::direction::Direction;
 
 #[derive(Debug, Clone)]
 pub struct Cell {
     pos: Vector2D<f32, f32>,
+    available_directions: Vec<Direction>,
     color: Color,
 }
 
@@ -11,11 +13,20 @@ impl Cell {
     pub fn new(x: i32, y: i32) -> Cell {
         Cell {
             pos: Vector2D::<f32, f32>::new(x as f32, y as f32),
-            color: Color::new(255, x as u8, y as u8, x as u8),
+            color: Color::new(255, 255, 0, 0),
+            available_directions: vec![],
         }
     }
     pub fn color(&self) -> Color {
         self.color
+    }
+
+    pub fn available_directions(&self) -> &Vec<Direction> {
+        &self.available_directions
+    }
+
+    pub fn set_available_directions(&mut self, available_directions: Vec<Direction>) {
+        self.available_directions = available_directions;
     }
 }
 
