@@ -1,0 +1,25 @@
+[package]
+name = "maze"
+version = "0.1.0"
+authors = ["hakolao <okkohakola@gmail.com>"]
+edition = "2018"
+
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+winit = "0.22.2"
+pixels = "0.2.0"
+winit_input_helper = "0.7.0"
+log = "0.4.11"
+raqote = "0.8.0"
+imgui-winit-support = "0.5.0"
+imgui = "0.5.0"
+imgui-wgpu = "0.11.0"
+env_logger = "0.8.1"
+rayon = "1.5.0"
+euclid = "0.22.1"
