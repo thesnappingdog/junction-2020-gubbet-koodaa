@@ -26,6 +26,11 @@ async def print_message(sid, message):
     print("Socket ID: " , sid)
     print(message)
 
+@sio.on('audioRecording')
+async def receive_audio(sid, data):
+    print(sid)
+    print(data)
+
 ## We bind our aiohttp endpoint to our app
 ## router
 app.router.add_get('/', index)
