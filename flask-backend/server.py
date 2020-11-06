@@ -30,6 +30,9 @@ async def print_message(sid, message):
 async def receive_audio(sid, data):
     print(sid)
     print(data)
+    ## resample / resize?
+    ## store data to local file
+    ## send to ML part 
 
 ## We bind our aiohttp endpoint to our app
 ## router
