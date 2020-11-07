@@ -1,3 +1,4 @@
+use crate::app::CustomEvent;
 use crate::direction::Direction;
 use crate::maze::{Cell, MazeGrid};
 use crate::window::AppWindow;
@@ -6,7 +7,7 @@ use rand::prelude::SliceRandom;
 use rand::{thread_rng, Rng};
 use raqote::{Color, IntPoint};
 use uuid::Uuid;
-use winit::event::VirtualKeyCode;
+use winit::event::{Event, VirtualKeyCode};
 use winit_input_helper::WinitInputHelper;
 
 #[derive(Debug, Clone)]
@@ -114,12 +115,30 @@ impl MazeGame {
         self.winner = None;
     }
 
-    pub fn handle_input(&mut self, _window: &AppWindow, input: &WinitInputHelper) {
+    pub fn handle_input(
+        &mut self,
+        _window: &AppWindow,
+        input: &WinitInputHelper,
+        event: &Event<CustomEvent>,
+    ) {
         self.input = input.clone();
-        self.resolve_input();
-    }
-
-    fn resolve_input(&mut self) {
+        match event {
+            Event::UserEvent(event) => match event {
+                CustomEvent::PlayerConnected(name) => {
+                    // Add player
+                    println!("Player connected: {}", name);
+                }
+                CustomEvent::PlayerDisconnected(name) => {
+                    // Remove player
+                    println!("Player disconnected: {}", name);
+                }
+                CustomEvent::PlayerMove(name, direction) => {
+                    // Move player (only if player exists, if not, could create it...
+                    println!("Player move: {} {:?}", name, direction);
+                }
+            },
+            _ => (),
+        }
         if !self.is_finished {
             if self.input.key_pressed(VirtualKeyCode::Up) {
                 self.try_move(self.arrow_player, Direction::Up);
@@ -189,7 +208,7 @@ impl MazeGame {
     }
 
     fn render_players(&mut self, window: &mut AppWindow) {
-        // Shuffle so they are sometimes rendered in differend order to show players are in same cell
+        // Shuffle so they are sometimes rendered in different order to show players are in same cell
         self.players.shuffle(&mut thread_rng());
         for player in self.players.iter() {
             let start_x = self.camera_pos.x - self.maze.size() * self.wall_padding / 2
