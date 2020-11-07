@@ -24,4 +24,4 @@ class PlayerCommand(Enum):
         elif text == 'right':
             return cls.RIGHT
         else:
-            return ValueError
+            return None
