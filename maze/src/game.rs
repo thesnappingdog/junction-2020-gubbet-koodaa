@@ -2,7 +2,8 @@ use crate::direction::Direction;
 use crate::maze::{Cell, MazeGrid};
 use crate::window::AppWindow;
 use euclid::Vector2D;
-use rand::Rng;
+use rand::prelude::SliceRandom;
+use rand::{thread_rng, Rng};
 use raqote::{Color, IntPoint};
 use uuid::Uuid;
 use winit::event::VirtualKeyCode;
@@ -188,6 +189,8 @@ impl MazeGame {
     }
 
     fn render_players(&mut self, window: &mut AppWindow) {
+        // Shuffle so they are sometimes rendered in differend order to show players are in same cell
+        self.players.shuffle(&mut thread_rng());
         for player in self.players.iter() {
             let start_x = self.camera_pos.x - self.maze.size() * self.wall_padding / 2
                 + player.pos.x * (self.cell_size + self.wall_padding)
