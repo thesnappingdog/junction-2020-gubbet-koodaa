@@ -94,13 +94,13 @@ impl MazeGame {
         self.winner = None;
     }
 
-    pub fn players(&self) -> Vec<String> {
+    pub fn players(&self) -> Vec<(String, Color)> {
         let mut players = self
             .players
             .iter()
-            .map(|p| p.name.clone())
-            .collect::<Vec<String>>();
-        players.sort();
+            .map(|p| (p.name.clone(), p.color))
+            .collect::<Vec<(String, Color)>>();
+        players.sort_by(|a, b| a.0.cmp(&b.0));
         players
     }
 
