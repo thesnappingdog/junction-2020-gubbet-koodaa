@@ -11,10 +11,10 @@ from player_map import PlayerMap
 global PLAYER_MAP
 PLAYER_MAP = PlayerMap()
 
-global maze_socket
-maze_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-maze_socket.bind(('localhost', 8080))
-maze_conn, maze_addr = maze_socket.accept()
+# global maze_socket
+# maze_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# maze_socket.bind(('localhost', 8080))
+# maze_conn, maze_addr = maze_socket.accept()
 
 # Maze socket usage:
 
@@ -71,7 +71,7 @@ def handleBinaryMessage(peer, payload, factory):
 def handleTextMessage(peer, msg, factory):
     command, text = PlayerCommand.from_key_press(msg)
     if command == None:
-        print(f"[{peer}] >> \"" + msg + "\" (failed to parse player command)")
+        print(f"[{peer}] >> \"" + msg + "\" (failed to parse key press command)")
         return
     
     if command == PlayerCommand.NICK:
