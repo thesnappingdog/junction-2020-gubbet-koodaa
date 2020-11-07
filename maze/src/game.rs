@@ -1,3 +1,4 @@
+use crate::custom_events::CustomEvent;
 use crate::direction::Direction;
 use crate::maze::{Cell, MazeGrid};
 use crate::window::AppWindow;
@@ -6,7 +7,7 @@ use rand::prelude::SliceRandom;
 use rand::{thread_rng, Rng};
 use raqote::{Color, IntPoint};
 use uuid::Uuid;
-use winit::event::VirtualKeyCode;
+use winit::event::Event;
 use winit_input_helper::WinitInputHelper;
 
 #[derive(Debug, Clone)]
@@ -37,10 +38,6 @@ impl Player {
     pub fn move_to(&mut self, cell: &Cell) {
         self.pos = cell.pos()
     }
-
-    pub fn id(&self) -> Uuid {
-        self.id
-    }
 }
 
 pub struct MazeGame {
@@ -49,11 +46,9 @@ pub struct MazeGame {
     input: WinitInputHelper,
     cell_size: i32,
     players: Vec<Player>,
-    arrow_player: Uuid,
-    wasd_player: Uuid,
     wall_padding: i32,
     is_finished: bool,
-    winner: Option<Uuid>,
+    winner: Option<String>,
 }
 
 impl MazeGame {
@@ -65,20 +60,7 @@ impl MazeGame {
         let cell_size = ((window.size().1 as f32 - 1.05 * grid_size as f32 * wall_padding as f32)
             / (1.05 * grid_size as f32)) as i32;
         let input = WinitInputHelper::new();
-        let players = vec![
-            Player::new(
-                cell_size / 2,
-                Vector2D::<i32, i32>::new(0, 0),
-                "Joonas".to_string(),
-            ),
-            Player::new(
-                cell_size / 2,
-                Vector2D::<i32, i32>::new(1, 0),
-                "Satka".to_string(),
-            ),
-        ];
-        let arrow_player = players.first().unwrap().id();
-        let wasd_player = players.last().unwrap().id();
+        let players = vec![];
         MazeGame {
             maze,
             camera_pos: IntPoint::new(
@@ -89,8 +71,6 @@ impl MazeGame {
             cell_size,
             players,
             wall_padding,
-            arrow_player,
-            wasd_player,
             is_finished: false,
             winner: None,
         }
@@ -114,35 +94,61 @@ impl MazeGame {
         self.winner = None;
     }
 
-    pub fn handle_input(&mut self, _window: &AppWindow, input: &WinitInputHelper) {
-        self.input = input.clone();
-        self.resolve_input();
+    pub fn players(&self) -> Vec<String> {
+        let mut players = self
+            .players
+            .iter()
+            .map(|p| p.name.clone())
+            .collect::<Vec<String>>();
+        players.sort();
+        players
     }
 
-    fn resolve_input(&mut self) {
-        if !self.is_finished {
-            if self.input.key_pressed(VirtualKeyCode::Up) {
-                self.try_move(self.arrow_player, Direction::Up);
-            } else if self.input.key_pressed(VirtualKeyCode::Right) {
-                self.try_move(self.arrow_player, Direction::Right);
-            } else if self.input.key_pressed(VirtualKeyCode::Down) {
-                self.try_move(self.arrow_player, Direction::Down);
-            } else if self.input.key_pressed(VirtualKeyCode::Left) {
-                self.try_move(self.arrow_player, Direction::Left);
-            }
-            if self.input.key_pressed(VirtualKeyCode::W) {
-                self.try_move(self.wasd_player, Direction::Up);
-            } else if self.input.key_pressed(VirtualKeyCode::D) {
-                self.try_move(self.wasd_player, Direction::Right);
-            } else if self.input.key_pressed(VirtualKeyCode::S) {
-                self.try_move(self.wasd_player, Direction::Down);
-            } else if self.input.key_pressed(VirtualKeyCode::A) {
-                self.try_move(self.wasd_player, Direction::Left);
-            }
+    fn add_player(&mut self, name: &str) {
+        if self.players.iter().find(|p| &p.name == name).is_none() {
+            self.players.push(Player::new(
+                self.cell_size / 2,
+                self.maze.start_pos(),
+                name.to_string(),
+            ));
         }
     }
 
-    fn try_move(&mut self, player: Uuid, dir: Direction) {
+    fn remove_player(&mut self, name: &str) {
+        if self.players.iter().find(|p| &p.name == name).is_some() {
+            let index = self.players.iter().position(|p| &p.name == name).unwrap();
+            self.players.remove(index);
+        }
+    }
+
+    pub fn handle_custom_events(&mut self, event: &Event<CustomEvent>) {
+        match event {
+            Event::UserEvent(event) => match event {
+                CustomEvent::PlayerConnected(name) => {
+                    self.add_player(name);
+                    println!("Player connected: {}", name);
+                }
+                CustomEvent::PlayerDisconnected(name) => {
+                    self.remove_player(name);
+                    println!("Player disconnected: {}", name);
+                }
+                CustomEvent::PlayerMove(name, direction) => {
+                    if self.players.iter().find(|p| &p.name == name).is_none() {
+                        self.add_player(name);
+                    }
+                    self.try_move(name, *direction);
+                    println!("Player move: {} {:?}", name, direction);
+                }
+            },
+            _ => (),
+        }
+    }
+
+    pub fn handle_input(&mut self, _window: &AppWindow, input: &WinitInputHelper) {
+        self.input = input.clone();
+    }
+
+    fn try_move(&mut self, player: &str, dir: Direction) {
         let grid_dir = dir.grid_dir();
         let player_pos = self.get_player(player).pos;
         let target_cell = self
@@ -161,19 +167,19 @@ impl MazeGame {
                     && new_cell.pos().y == self.maze.end_pos().y
                 {
                     self.is_finished = true;
-                    self.winner = Some(player);
+                    self.winner = Some(player.to_string());
                 }
             }
         }
     }
 
-    fn get_player(&mut self, id: Uuid) -> &mut Player {
-        self.players.iter_mut().find(|p| p.id == id).unwrap()
+    fn get_player(&mut self, name: &str) -> &mut Player {
+        self.players.iter_mut().find(|p| p.name == name).unwrap()
     }
 
     pub fn winner_name(&mut self) -> Option<String> {
-        if let Some(winner) = self.winner {
-            Some(format!("{}", self.get_player(winner).name))
+        if let Some(winner) = self.winner.clone() {
+            Some(format!("{}", self.get_player(&winner).name))
         } else {
             None
         }
@@ -189,7 +195,7 @@ impl MazeGame {
     }
 
     fn render_players(&mut self, window: &mut AppWindow) {
-        // Shuffle so they are sometimes rendered in differend order to show players are in same cell
+        // Shuffle so they are sometimes rendered in different order to show players are in same cell
         self.players.shuffle(&mut thread_rng());
         for player in self.players.iter() {
             let start_x = self.camera_pos.x - self.maze.size() * self.wall_padding / 2

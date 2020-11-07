@@ -1,8 +1,10 @@
+use crate::custom_events::{handle_client, CustomEvent};
 use crate::game::MazeGame;
 use crate::gui::Gui;
 use crate::window::AppWindow;
 use log::error;
 use pixels::Error;
+use std::net::TcpListener;
 use std::time::Instant;
 use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -20,13 +22,22 @@ impl App {
 
     pub fn run(mut self, name: &str, width: u32, height: u32, maze_size: i32) -> Result<(), Error> {
         let mut time = Instant::now();
-        let event_loop = EventLoop::new();
+        let event_loop = EventLoop::<CustomEvent>::with_user_event();
         let mut window = AppWindow::new(name, &event_loop, width, height);
         let mut input = WinitInputHelper::new();
         let mut frame_sum = 0.;
         let mut dt_sum = 0.;
         let mut gui = Gui::new(&window.window(), &window.pixels());
         let mut game = MazeGame::new(maze_size, &window);
+        let event_loop_proxy = event_loop.create_proxy();
+        let listener = TcpListener::bind("127.0.0.1:8080").expect("Failed to bind to address");
+        // Listen player connections
+        std::thread::spawn(move || loop {
+            for stream in listener.incoming() {
+                handle_client(stream.expect("Failed to read stream"), &event_loop_proxy)
+                    .expect("Failed to handle tcp message");
+            }
+        });
         event_loop.run(move |event, _, control_flow| {
             gui.handle_event(&window.window(), &event, &mut game);
             if let Event::RedrawRequested(_) = event {
@@ -42,6 +53,7 @@ impl App {
                 }
                 self.capture_fps(&mut dt_sum, &mut frame_sum, &mut time);
             }
+            game.handle_custom_events(&event);
             if input.update(&event) {
                 if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
                     *control_flow = ControlFlow::Exit;

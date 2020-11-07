@@ -25,7 +25,7 @@ class FilterBankDataset(Dataset):
     def __getitem__(self, idx):
         filename = self.df["filename"][idx]
         
-        waveform, sample_rate = torchaudio.load("/Users/juliushietala/junction_2020/free-spoken-digit-dataset/recordings/"+filename)
+        waveform, sample_rate = torchaudio.load("../../../free-spoken-digit-dataset/recordings/"+filename)
         
         frame_length = self.n_fft / sample_rate * 1000.0
         frame_shift = frame_length / 2.0

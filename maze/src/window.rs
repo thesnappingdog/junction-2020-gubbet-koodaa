@@ -1,3 +1,4 @@
+use crate::custom_events::CustomEvent;
 use crate::gui::Gui;
 use pixels::{Error, Pixels, PixelsBuilder, SurfaceTexture};
 use rayon::prelude::*;
@@ -15,7 +16,7 @@ pub struct AppWindow {
 impl AppWindow {
     pub fn new(
         title: &str,
-        event_loop: &EventLoop<()>,
+        event_loop: &EventLoop<CustomEvent>,
         win_width: u32,
         win_height: u32,
     ) -> AppWindow {
