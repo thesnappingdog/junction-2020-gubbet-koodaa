@@ -27,9 +27,8 @@ impl App {
         let mut dt_sum = 0.;
         let mut gui = Gui::new(&window.window(), &window.pixels());
         let mut game = MazeGame::new(maze_size, &window);
-        game.init();
         event_loop.run(move |event, _, control_flow| {
-            gui.handle_event(&window.window(), &event);
+            gui.handle_event(&window.window(), &event, &mut game);
             if let Event::RedrawRequested(_) = event {
                 window.clear().expect("Failed to clear");
                 game.update(&mut window, self.dt);

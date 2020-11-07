@@ -2,7 +2,6 @@ use crate::direction::Direction;
 use crate::maze::{Cell, MazeGrid};
 use crate::window::AppWindow;
 use euclid::Vector2D;
-use log::debug;
 use rand::Rng;
 use raqote::{Color, IntPoint};
 use uuid::Uuid;
@@ -12,13 +11,14 @@ use winit_input_helper::WinitInputHelper;
 #[derive(Debug, Clone)]
 struct Player {
     id: Uuid,
+    name: String,
     color: Color,
     pos: Vector2D<i32, i32>,
     size: i32,
 }
 
 impl Player {
-    pub fn new(size: i32, pos: Vector2D<i32, i32>) -> Player {
+    pub fn new(size: i32, pos: Vector2D<i32, i32>, name: String) -> Player {
         Player {
             id: Uuid::new_v4(),
             color: Color::new(
@@ -29,6 +29,7 @@ impl Player {
             ),
             size,
             pos,
+            name,
         }
     }
 
@@ -42,7 +43,6 @@ impl Player {
 }
 
 pub struct MazeGame {
-    #[allow(dead_code)]
     maze: MazeGrid,
     camera_pos: IntPoint,
     input: WinitInputHelper,
@@ -51,11 +51,13 @@ pub struct MazeGame {
     arrow_player: Uuid,
     wasd_player: Uuid,
     wall_padding: i32,
+    is_finished: bool,
+    winner: Option<Uuid>,
 }
 
 impl MazeGame {
     pub fn new(grid_size: i32, window: &AppWindow) -> MazeGame {
-        let maze = MazeGrid::new(grid_size, (0, 0));
+        let maze = MazeGrid::new(grid_size, (0, 0), (grid_size - 1, grid_size - 1));
         let (buffer_width, buffer_height) = window.size();
         let wall_padding = 2;
         // Just some math to get the grid fit height of window
@@ -63,8 +65,16 @@ impl MazeGame {
             / (1.05 * grid_size as f32)) as i32;
         let input = WinitInputHelper::new();
         let players = vec![
-            Player::new(cell_size / 2, Vector2D::<i32, i32>::new(0, 0)),
-            Player::new(cell_size / 2, Vector2D::<i32, i32>::new(1, 0)),
+            Player::new(
+                cell_size / 2,
+                Vector2D::<i32, i32>::new(0, 0),
+                "Joonas".to_string(),
+            ),
+            Player::new(
+                cell_size / 2,
+                Vector2D::<i32, i32>::new(1, 0),
+                "Satka".to_string(),
+            ),
         ];
         let arrow_player = players.first().unwrap().id();
         let wasd_player = players.last().unwrap().id();
@@ -80,11 +90,27 @@ impl MazeGame {
             wall_padding,
             arrow_player,
             wasd_player,
+            is_finished: false,
+            winner: None,
         }
     }
 
-    pub fn init(&mut self) {
-        //insert resources here etc...
+    pub fn restart(&mut self) {
+        let maze = MazeGrid::new(
+            self.maze.size(),
+            (0, 0),
+            (self.maze.size() - 1, self.maze.size() - 1),
+        );
+        let mut players = vec![];
+        for p in &self.players {
+            let mut player = p.clone();
+            player.pos = Vector2D::<i32, i32>::new(0, 0);
+            players.push(player);
+        }
+        self.maze = maze;
+        self.players = players;
+        self.is_finished = false;
+        self.winner = None;
     }
 
     pub fn handle_input(&mut self, _window: &AppWindow, input: &WinitInputHelper) {
@@ -93,23 +119,25 @@ impl MazeGame {
     }
 
     fn resolve_input(&mut self) {
-        if self.input.key_pressed(VirtualKeyCode::Up) {
-            self.try_move(self.arrow_player, Direction::Up);
-        } else if self.input.key_pressed(VirtualKeyCode::Right) {
-            self.try_move(self.arrow_player, Direction::Right);
-        } else if self.input.key_pressed(VirtualKeyCode::Down) {
-            self.try_move(self.arrow_player, Direction::Down);
-        } else if self.input.key_pressed(VirtualKeyCode::Left) {
-            self.try_move(self.arrow_player, Direction::Left);
-        }
-        if self.input.key_pressed(VirtualKeyCode::W) {
-            self.try_move(self.wasd_player, Direction::Up);
-        } else if self.input.key_pressed(VirtualKeyCode::D) {
-            self.try_move(self.wasd_player, Direction::Right);
-        } else if self.input.key_pressed(VirtualKeyCode::S) {
-            self.try_move(self.wasd_player, Direction::Down);
-        } else if self.input.key_pressed(VirtualKeyCode::A) {
-            self.try_move(self.wasd_player, Direction::Left);
+        if !self.is_finished {
+            if self.input.key_pressed(VirtualKeyCode::Up) {
+                self.try_move(self.arrow_player, Direction::Up);
+            } else if self.input.key_pressed(VirtualKeyCode::Right) {
+                self.try_move(self.arrow_player, Direction::Right);
+            } else if self.input.key_pressed(VirtualKeyCode::Down) {
+                self.try_move(self.arrow_player, Direction::Down);
+            } else if self.input.key_pressed(VirtualKeyCode::Left) {
+                self.try_move(self.arrow_player, Direction::Left);
+            }
+            if self.input.key_pressed(VirtualKeyCode::W) {
+                self.try_move(self.wasd_player, Direction::Up);
+            } else if self.input.key_pressed(VirtualKeyCode::D) {
+                self.try_move(self.wasd_player, Direction::Right);
+            } else if self.input.key_pressed(VirtualKeyCode::S) {
+                self.try_move(self.wasd_player, Direction::Down);
+            } else if self.input.key_pressed(VirtualKeyCode::A) {
+                self.try_move(self.wasd_player, Direction::Left);
+            }
         }
     }
 
@@ -128,6 +156,12 @@ impl MazeGame {
         if let Some(new_cell) = target_cell {
             if curr_cell.has_link_to(&new_cell) {
                 self.get_player(player).move_to(&new_cell);
+                if new_cell.pos().x == self.maze.end_pos().x
+                    && new_cell.pos().y == self.maze.end_pos().y
+                {
+                    self.is_finished = true;
+                    self.winner = Some(player);
+                }
             }
         }
     }
@@ -136,7 +170,18 @@ impl MazeGame {
         self.players.iter_mut().find(|p| p.id == id).unwrap()
     }
 
+    pub fn winner_name(&mut self) -> Option<String> {
+        if let Some(winner) = self.winner {
+            Some(format!("{}", self.get_player(winner).name))
+        } else {
+            None
+        }
+    }
+
     pub fn update(&mut self, window: &mut AppWindow, _dt: f64) {
+        if self.is_finished {
+            return;
+        }
         // Update game logic based on inputs here, then render
         self.render_grid(window);
         self.render_players(window);

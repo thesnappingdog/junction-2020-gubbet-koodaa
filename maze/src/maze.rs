@@ -1,5 +1,6 @@
 use crate::direction::Direction;
 use euclid::Vector2D;
+use log::error;
 use rand;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -72,10 +73,11 @@ pub struct MazeGrid {
     grid: Vec<Vec<Cell>>,
     size: i32,
     start: (i32, i32),
+    end: (i32, i32),
 }
 
 impl MazeGrid {
-    pub fn new(size: i32, start_pos: (i32, i32)) -> MazeGrid {
+    pub fn new(size: i32, start_pos: (i32, i32), end_pos: (i32, i32)) -> MazeGrid {
         let mut grid = vec![];
         for y in 0..size {
             let mut row = vec![];
@@ -88,15 +90,27 @@ impl MazeGrid {
             grid,
             size,
             start: start_pos,
+            end: end_pos,
         }
-        .generate_maze(start_pos)
+        .generate_maze(start_pos, end_pos)
     }
 
-    fn generate_maze(mut self, start: (i32, i32)) -> Self {
-        if start.0 >= 0 && start.0 < self.size && start.1 >= 0 && start.1 < self.size {
+    fn generate_maze(mut self, start: (i32, i32), end_pos: (i32, i32)) -> Self {
+        if start.0 >= 0
+            && start.0 < self.size
+            && start.1 >= 0
+            && start.1 < self.size
+            && end_pos.0 >= 0
+            && end_pos.0 < self.size
+            && end_pos.1 >= 0
+            && end_pos.1 < self.size
+        {
             self.generate_from(start.0, start.1);
+            self.grid[start.1 as usize][start.0 as usize].set_color(Color::new(255, 0, 255, 0));
+            self.grid[end_pos.1 as usize][end_pos.0 as usize].set_color(Color::new(255, 255, 0, 0));
+        } else {
+            error!("Invalid start & end pos");
         }
-        self.grid[start.1 as usize][start.0 as usize].set_color(Color::new(255, 0, 255, 0));
         self
     }
 
@@ -150,6 +164,10 @@ impl MazeGrid {
                 .available_directions()
                 .len()
                 == 0
+    }
+
+    pub fn end_pos(&self) -> Vector2D<i32, i32> {
+        Vector2D::<i32, i32>::new(self.end.0, self.end.1)
     }
 
     pub fn cell_at(&self, x: i32, y: i32) -> Option<&Cell> {

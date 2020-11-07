@@ -1,4 +1,5 @@
-use imgui::{im_str, Context, FontSource, MenuItem, MouseCursor};
+use crate::game::MazeGame;
+use imgui::{im_str, Condition, Context, FontSource, MenuItem, MouseCursor, Window as ImguiWindow};
 use imgui_wgpu::{Renderer, RendererConfig, RendererResult};
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 use pixels::raw_window_handle::HasRawWindowHandle;
@@ -21,6 +22,9 @@ pub struct Gui {
     last_frame: Instant,
     last_cursor: Option<MouseCursor>,
     metrics_open: bool,
+    end_game_open: bool,
+    restart: bool,
+    winner: String,
 }
 
 impl Gui {
@@ -61,6 +65,9 @@ impl Gui {
             last_frame: Instant::now(),
             last_cursor: None,
             metrics_open: false,
+            end_game_open: false,
+            winner: "".to_string(),
+            restart: false,
         }
     }
 
@@ -96,6 +103,30 @@ impl Gui {
         if self.metrics_open {
             ui.show_metrics_window(&mut self.metrics_open);
         }
+        if self.end_game_open {
+            let winner = self.winner.clone();
+            ImguiWindow::new(im_str!("Game Over!"))
+                .movable(false)
+                .resizable(false)
+                .collapsible(false)
+                .position(
+                    [
+                        window.inner_size().width as f32 / window.scale_factor() as f32 / 2.
+                            - 300.0 / 2.0,
+                        window.inner_size().height as f32 / window.scale_factor() as f32 / 2.0
+                            - 300.0 / 2.0,
+                    ],
+                    Condition::FirstUseEver,
+                )
+                .size([300.0, 300.0], Condition::FirstUseEver)
+                .opened(&mut self.end_game_open)
+                .build(&ui, || {
+                    ui.text_colored([0., 1.0, 0., 1.0], im_str!("Winner: {}", winner));
+                });
+            if !self.end_game_open {
+                self.restart = true;
+            }
+        }
         let mouse_cursor = ui.mouse_cursor();
         if self.last_cursor != mouse_cursor {
             self.last_cursor = mouse_cursor;
@@ -117,13 +148,17 @@ impl Gui {
             .render(ui.render(), &context.queue, &context.device, &mut rpass)
     }
 
-    pub fn handle_event(
-        &mut self,
-        window: &Window,
-        event: &Event<()>,
-    ) {
+    pub fn handle_event(&mut self, window: &Window, event: &Event<()>, game: &mut MazeGame) {
         self.platform
             .handle_event(self.imgui.io_mut(), window, event);
+        if self.restart {
+            game.restart();
+            self.restart = false;
+        }
+        if let Some(winner) = game.winner_name() {
+            self.end_game_open = true;
+            self.winner = winner;
+        }
     }
 }
 
