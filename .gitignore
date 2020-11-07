@@ -1,6 +1,8 @@
 # Byte-compiled / optimized / DLL files
 
 .././.vscode
+flask-backend/host.cert
+flask-backend/host.key
 
 __pycache__/
 *.py[cod]
