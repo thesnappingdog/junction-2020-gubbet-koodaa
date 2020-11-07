@@ -1,86 +1,14 @@
-use crate::direction::Direction;
+use crate::custom_events::{handle_client, CustomEvent};
 use crate::game::MazeGame;
 use crate::gui::Gui;
 use crate::window::AppWindow;
 use log::error;
 use pixels::Error;
-use std::io::{Error as StdError, Read, Write};
-use std::net::{TcpListener, TcpStream};
-use std::str;
+use std::net::TcpListener;
 use std::time::Instant;
-use uuid::Uuid;
 use winit::event::{Event, VirtualKeyCode};
-use winit::event_loop::{ControlFlow, EventLoop, EventLoopProxy};
+use winit::event_loop::{ControlFlow, EventLoop};
 use winit_input_helper::WinitInputHelper;
-
-// Events like: echo "connect:okko" | nc localhost 8080
-// echo "disconnect:okko" | nc localhost 8080
-// echo "move:okko:left" | nc localhost 8080
-fn handle_client(
-    mut stream: TcpStream,
-    event_loop_proxy: &EventLoopProxy<CustomEvent>,
-) -> Result<(), StdError> {
-    println!("Connection from {}", stream.peer_addr()?);
-    let mut buf = Vec::with_capacity(256);
-    stream.read_to_end(&mut buf);
-    let message = match str::from_utf8(&buf) {
-        Ok(v) => v,
-        Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
-    };
-    let parts = message.split(":").collect::<Vec<&str>>();
-    match parts.len() {
-        2 => {
-            let action_str = parts[0].split_whitespace().next().unwrap();
-            let name_str = parts[1].split_whitespace().next().unwrap();
-            match action_str {
-                "connect" => {
-                    println!("try to send connect event {}", name_str);
-                    event_loop_proxy
-                        .send_event(CustomEvent::PlayerConnected(name_str.to_string()))
-                        .ok();
-                }
-                "disconnect" => {
-                    event_loop_proxy
-                        .send_event(CustomEvent::PlayerDisconnected(name_str.to_string()))
-                        .ok();
-                }
-                _ => (),
-            }
-        }
-        3 => {
-            let action_str = parts[0].split_whitespace().next().unwrap();
-            let name_str = parts[1].split_whitespace().next().unwrap();
-            let dir = parts[2].split_whitespace().next().unwrap();
-            match action_str {
-                "move" => {
-                    let direction = match dir {
-                        "up" => Some(Direction::Up),
-                        "right" => Some(Direction::Right),
-                        "down" => Some(Direction::Down),
-                        "left" => Some(Direction::Left),
-                        _ => None,
-                    };
-                    if let Some(direction) = direction {
-                        event_loop_proxy
-                            .send_event(CustomEvent::PlayerMove(name_str.to_string(), direction))
-                            .ok();
-                    }
-                }
-                _ => (),
-            }
-        }
-        _ => (),
-    }
-    println!("{:?}", message);
-    Ok(())
-}
-
-#[derive(Debug, Clone)]
-pub enum CustomEvent {
-    PlayerConnected(String),
-    PlayerMove(String, Direction),
-    PlayerDisconnected(String),
-}
 
 pub struct App {
     dt: f64,
@@ -106,7 +34,8 @@ impl App {
         // Listen player connections
         std::thread::spawn(move || loop {
             for stream in listener.incoming() {
-                handle_client(stream.expect("Failed to read stream"), &event_loop_proxy);
+                handle_client(stream.expect("Failed to read stream"), &event_loop_proxy)
+                    .expect("Failed to handle tcp message");
             }
         });
         event_loop.run(move |event, _, control_flow| {

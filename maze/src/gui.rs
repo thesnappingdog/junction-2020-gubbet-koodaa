@@ -1,4 +1,4 @@
-use crate::app::CustomEvent;
+use crate::custom_events::CustomEvent;
 use crate::game::MazeGame;
 use imgui::{im_str, Condition, Context, FontSource, MenuItem, MouseCursor, Window as ImguiWindow};
 use imgui_wgpu::{Renderer, RendererConfig, RendererResult};

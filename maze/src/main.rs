@@ -1,4 +1,5 @@
 mod app;
+mod custom_events;
 mod direction;
 mod game;
 mod gui;
