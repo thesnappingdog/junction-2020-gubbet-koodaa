@@ -31,7 +31,7 @@ impl App {
         let mut game = MazeGame::new(maze_size, &window);
         let event_loop_proxy = event_loop.create_proxy();
         let listener = TcpListener::bind("127.0.0.1:8080").expect("Failed to bind to address");
-        // Listen player connections
+        // Listen player connections & incoming events, handle client creates custom events based on those
         std::thread::spawn(move || loop {
             for stream in listener.incoming() {
                 handle_client(stream.expect("Failed to read stream"), &event_loop_proxy)
@@ -42,6 +42,7 @@ impl App {
             gui.handle_event(&window.window(), &event, &mut game);
             if let Event::RedrawRequested(_) = event {
                 window.clear().expect("Failed to clear");
+                // Update game (render etc...) after redraw request
                 game.update(&mut window, self.dt);
                 if window
                     .present_with_gui(&mut gui)
@@ -53,6 +54,8 @@ impl App {
                 }
                 self.capture_fps(&mut dt_sum, &mut frame_sum, &mut time);
             }
+            // Custom events must be handled before input.update, since input.update consumes events
+            // Though currently input ain't used...
             game.handle_custom_events(&event);
             if input.update(&event) {
                 if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
