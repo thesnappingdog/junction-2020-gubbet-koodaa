@@ -53,10 +53,9 @@ pub struct MazeGame {
 
 impl MazeGame {
     pub fn new(grid_size: i32, window: &AppWindow) -> MazeGame {
-        let maze = MazeGrid::new(grid_size);
+        let maze = MazeGrid::new(grid_size, (0, 0));
         let (buffer_width, buffer_height) = window.size();
-        //(720 - 1.07 * 16 * padding) / 1.07 * (16 = 1.07 * (16 * (cell_size + padding))
-        let wall_padding = 4;
+        let wall_padding = 2;
         // Just some math to get the grid fit height of window
         let cell_size = ((window.size().1 as f32 - 1.05 * grid_size as f32 * wall_padding as f32)
             / (1.05 * grid_size as f32)) as i32;

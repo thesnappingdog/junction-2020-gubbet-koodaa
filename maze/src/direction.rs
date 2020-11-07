@@ -43,6 +43,19 @@ impl Direction {
         }
     }
 
+    pub fn grid_dir(&self) -> (i32, i32) {
+        match self {
+            Direction::Up => (0, -1),
+            Direction::Right => (1, 0),
+            Direction::Down => (0, 1),
+            Direction::Left => (-1, 0),
+        }
+    }
+
+    pub fn grid_dir_opposite(&self) -> (i32, i32) {
+        self.opposite().grid_dir()
+    }
+
     #[allow(dead_code)]
     pub fn opposite(&self) -> Direction {
         self.next().next()
