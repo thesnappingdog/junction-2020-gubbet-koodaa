@@ -1,3 +1,4 @@
+use crate::app::CustomEvent;
 use crate::game::MazeGame;
 use imgui::{im_str, Condition, Context, FontSource, MenuItem, MouseCursor, Window as ImguiWindow};
 use imgui_wgpu::{Renderer, RendererConfig, RendererResult};
@@ -148,7 +149,12 @@ impl Gui {
             .render(ui.render(), &context.queue, &context.device, &mut rpass)
     }
 
-    pub fn handle_event(&mut self, window: &Window, event: &Event<()>, game: &mut MazeGame) {
+    pub fn handle_event(
+        &mut self,
+        window: &Window,
+        event: &Event<CustomEvent>,
+        game: &mut MazeGame,
+    ) {
         self.platform
             .handle_event(self.imgui.io_mut(), window, event);
         if self.restart {
