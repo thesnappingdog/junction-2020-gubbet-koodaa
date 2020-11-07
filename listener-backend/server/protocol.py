@@ -7,12 +7,11 @@ class ServerProtocol(WebSocketServerProtocol):
         self.factory.register(self)
 
     def onConnect(self, request):
-        print("Client connecting: {}".format(request.peer))
+        print("Client connecting: {} connecting".format(request.peer))
 
     def onMessage(self, payload, isBinary):
         if isBinary:
             self.factory.onBinaryMessage(self.peer, payload, self.factory)
-            print(f"Received {len(payload)} bytes of audio? data")
         else:
             msg = payload.decode("utf-8")
             self.factory.onTextMessage(self.peer, msg, self.factory)

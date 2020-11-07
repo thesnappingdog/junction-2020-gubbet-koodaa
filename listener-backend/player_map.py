@@ -1,26 +1,28 @@
 class PlayerMap():
     def __init__(self):
-        self.pool = dict()
+        self.map = dict()
 
-    def register(self, peer, uuid):
-        self.pool[peer] = uuid
-        print(f"[PlayerUuidMap]: Player {uuid} at {peer} joined")
+    def register(self, peer, name):
+        self.map[peer] = name
+        print(f"[PlayerMap]: Player {name} at {peer} joined")
 
-    def unregister_uuid(self, uuid):
-        for _peer, _uuid in self.pool.items():
-            if _uuid == uuid:
+    def unregister_name(self, name):
+        for _peer, _name in self.map.items():
+            if _name == name:
                 self.unregister_peer(_peer)
 
-    def unregister_peer(self, peer):
-        uuid = self.pool.pop(peer, None)
-        if uuid != None:
-            print(f"[PlayerUuidMap]: Player {uuid} at {peer} joined")
+    def pop_peer(self, peer):
+        name = self.map.pop(peer, None)
+        if name != None:
+            print(f"[PlayerMap]: Player {name} at {peer} joined")
+            return name
+        return None
 
-    def get_uuid_by_peer(self, peer):
-        return self.pool.get(peer, None)
+    def get_name_by_peer(self, peer):
+        return self.map.get(peer, None)
 
-    def get_peer_by_uuid(self, uuid):
-        for _peer, _uuid in self.pool.items():
-            if _uuid == uuid:
+    def get_peer_by_name(self, name):
+        for _peer, _name in self.map.items():
+            if _name == name:
                 return self.get(_peer)
         return None
