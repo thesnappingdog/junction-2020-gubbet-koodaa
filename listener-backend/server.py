@@ -11,14 +11,12 @@ from player_map import PlayerMap
 global PLAYER_MAP
 PLAYER_MAP = PlayerMap()
 
-# global maze_socket
-# maze_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# maze_socket.bind(('localhost', 8080))
-# maze_conn, maze_addr = maze_socket.accept()
-
-# Maze socket usage:
-
-# maze_conn.send_all(data)
+def send_maze(event):
+    print(event)
+    maze_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    maze_socket.connect(('localhost', 8080))
+    maze_socket.send(bytes(event, 'utf-8'))
+    maze_socket.close()
 
 def run():
     # Websocket server
@@ -63,7 +61,7 @@ def handleBinaryMessage(peer, payload, factory):
 
     # Send player command to Rust game backend
     event = command.to_maze_event(name)
-    # maze_conn.sendall(event)
+    send_maze(event)
 
     # ToDo: Send back to player the detected command to be shown
     # factory.send(peer, command.__str__())
@@ -85,7 +83,8 @@ def handleTextMessage(peer, msg, factory):
         
         # Initialize player for the nick in Rust game backend
         event = PlayerCommand.CONNECT.to_maze_event(name)
-        # maze_conn.sendall(event)
+        print(event)
+        send_maze(event)
 
         # Send back confirmation to player that nickname was successfully noticed
         factory.send(peer, f"Your nickname is set to {text}")
@@ -100,7 +99,7 @@ def handleTextMessage(peer, msg, factory):
         # Send player command to Rust game backend
         event = command.to_maze_event(name)
         # event = f"{name}:{command.__str__()}"
-        # maze_conn.sendall(event)
+        send_maze(event)
         
         # Send back confirmation to player that key press was successfully noticed
         factory.send(peer, command.__str__())

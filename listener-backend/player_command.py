@@ -14,7 +14,8 @@ class PlayerCommand(Enum):
     DISCONNECT = 'disconnect'
 
     def to_maze_event(self, name):
-        return f"{name}:{self.__str__()}"
+        event_string = f"{name}:{self.value}"
+        return event_string
 
     @classmethod
     def from_key_press(cls, text):
