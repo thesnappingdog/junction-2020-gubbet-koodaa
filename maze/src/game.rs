@@ -102,6 +102,16 @@ impl MazeGame {
         self.winner = None;
     }
 
+    pub fn players(&self) -> Vec<String> {
+        let mut players = self
+            .players
+            .iter()
+            .map(|p| p.name.clone())
+            .collect::<Vec<String>>();
+        players.sort();
+        players
+    }
+
     fn add_player(&mut self, name: &str) {
         if self.players.iter().find(|p| &p.name == name).is_none() {
             self.players.push(Player::new(
