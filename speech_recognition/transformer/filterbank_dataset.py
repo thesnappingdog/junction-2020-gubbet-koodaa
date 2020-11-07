@@ -15,17 +15,19 @@ class FilterBankDataset(Dataset):
     def __init__(self, transform=None, mode="train"):
         # setting directories for data
         self.transform = transform
-        self.df = pd.read_csv("../digits.csv")
+        self.data_df = pd.read_csv("train_data.csv")
+        self.desired_labels = ['up', "down", "left", "right"]
+        self.labels_dict = {k: v for v, k in enumerate(self.desired_labels)}
         self.n_fft = 400.0
-        self.vector_size = 40
+        self.vector_size = 80
         self.mel_bins = 24
     def __len__(self):
-        return len(self.df) 
+        return len(self.data_df) 
 
     def __getitem__(self, idx):
-        filename = self.df["filename"][idx]
+        filename = self.data_df["path"][idx]
         
-        waveform, sample_rate = torchaudio.load("../../../free-spoken-digit-dataset/recordings/"+filename)
+        waveform, sample_rate = torchaudio.load(filename)
         
         frame_length = self.n_fft / sample_rate * 1000.0
         frame_shift = frame_length / 2.0
@@ -55,14 +57,18 @@ class FilterBankDataset(Dataset):
             data = base_vector
             
             
-        label = self.df["label"][idx]
+        label_str = self.data_df["label"][idx]
+        if label_str in self.desired_labels:
+            label = self.labels_dict[label_str]
+        else:
+            label = 4
 
         return data, label
 
 
 def collate(batch):
     mels = 24
-    bptt = 40
+    bptt = 80
     data = torch.stack([item[0] for item in batch], dim=1)
     labels = torch.tensor([item[1] for item in batch])
     return data, labels

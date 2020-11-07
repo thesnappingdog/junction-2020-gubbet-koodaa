@@ -14,7 +14,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     batch_size = 30
-    bptt = 40
+    bptt = 80
 
     ntoken_embedding = None #len(TEXT.vocab.stoi) # the size of vocabulary # AMOUNT OF COMMANDS
     embedding_size = 24 # embedding dimension
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     nlayers = 6 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
     nhead = 8 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
-    model = TransformerModel(ntoken_embedding, embedding_size, nhead, nhid, nlayers, n_outputs=10, ready_embedding=True, dropout=0.2, batch_size=batch_size, bptt=40).to(device)
+    model = TransformerModel(ntoken_embedding, embedding_size, nhead, nhid, nlayers, n_outputs=5, ready_embedding=True, dropout=0.2, batch_size=batch_size, bptt=bptt).to(device)
 
 
     criterion = nn.CrossEntropyLoss()
@@ -34,6 +34,7 @@ if __name__ == "__main__":
     dataloader = DataLoader(
         FilterBankDataset(), 
         batch_size=batch_size,
+        shuffle=True,
         collate_fn=collate)
 
 
