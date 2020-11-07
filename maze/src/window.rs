@@ -1,4 +1,4 @@
-use crate::app::CustomEvent;
+use crate::custom_events::CustomEvent;
 use crate::gui::Gui;
 use pixels::{Error, Pixels, PixelsBuilder, SurfaceTexture};
 use rayon::prelude::*;

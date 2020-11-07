@@ -1,3 +1,2 @@
-websockets==8.1
 twisted
 autobahn

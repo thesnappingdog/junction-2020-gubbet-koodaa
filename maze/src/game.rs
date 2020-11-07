@@ -1,4 +1,4 @@
-use crate::app::CustomEvent;
+use crate::custom_events::CustomEvent;
 use crate::direction::Direction;
 use crate::maze::{Cell, MazeGrid};
 use crate::window::AppWindow;
@@ -7,7 +7,7 @@ use rand::prelude::SliceRandom;
 use rand::{thread_rng, Rng};
 use raqote::{Color, IntPoint};
 use uuid::Uuid;
-use winit::event::{Event, VirtualKeyCode};
+use winit::event::Event;
 use winit_input_helper::WinitInputHelper;
 
 #[derive(Debug, Clone)]
@@ -37,14 +37,6 @@ impl Player {
 
     pub fn move_to(&mut self, cell: &Cell) {
         self.pos = cell.pos()
-    }
-
-    pub fn id(&self) -> Uuid {
-        self.id
-    }
-
-    pub fn name(&self) -> String {
-        self.name.clone()
     }
 }
 
@@ -102,13 +94,13 @@ impl MazeGame {
         self.winner = None;
     }
 
-    pub fn players(&self) -> Vec<String> {
+    pub fn players(&self) -> Vec<(String, Color)> {
         let mut players = self
             .players
             .iter()
-            .map(|p| p.name.clone())
-            .collect::<Vec<String>>();
-        players.sort();
+            .map(|p| (p.name.clone(), p.color))
+            .collect::<Vec<(String, Color)>>();
+        players.sort_by(|a, b| a.0.cmp(&b.0));
         players
     }
 

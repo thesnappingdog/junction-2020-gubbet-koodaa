@@ -1,4 +1,4 @@
-use crate::app::CustomEvent;
+use crate::custom_events::CustomEvent;
 use crate::game::MazeGame;
 use imgui::{im_str, Condition, Context, FontSource, MenuItem, MouseCursor, Window as ImguiWindow};
 use imgui_wgpu::{Renderer, RendererConfig, RendererResult};
@@ -9,6 +9,7 @@ use pixels::wgpu::{
     TextureFormat, TextureView,
 };
 use pixels::{Pixels, PixelsContext};
+use raqote::Color;
 use std::time::Instant;
 use winit::error::ExternalError;
 use winit::event::Event;
@@ -26,7 +27,7 @@ pub struct Gui {
     end_game_open: bool,
     restart: bool,
     winner: String,
-    players: Vec<String>,
+    players: Vec<(String, Color)>,
 }
 
 impl Gui {
@@ -139,7 +140,15 @@ impl Gui {
             .size([150.0, 300.0], Condition::FirstUseEver)
             .build(&ui, || {
                 for p in player_names {
-                    ui.text_colored([0., 1.0, 0., 1.0], im_str!("{}", p));
+                    ui.text_colored(
+                        [
+                            p.1.r() as f32 / 255.0,
+                            p.1.g() as f32 / 255.0,
+                            p.1.b() as f32 / 255.0,
+                            1.0,
+                        ],
+                        im_str!("{}", p.0),
+                    );
                 }
             });
         let mouse_cursor = ui.mouse_cursor();
