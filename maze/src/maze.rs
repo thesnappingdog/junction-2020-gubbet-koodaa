@@ -2,12 +2,12 @@ use crate::direction::Direction;
 use euclid::Vector2D;
 use rand;
 use rand::prelude::SliceRandom;
-use rand::{thread_rng, Rng};
+use rand::thread_rng;
 use raqote::Color;
 
 #[derive(Debug, Clone)]
 pub struct Cell {
-    pos: Vector2D<f32, f32>,
+    pos: Vector2D<i32, i32>,
     available_directions: Vec<Direction>,
     color: Color,
 }
@@ -15,13 +15,43 @@ pub struct Cell {
 impl Cell {
     pub fn new(x: i32, y: i32) -> Cell {
         Cell {
-            pos: Vector2D::<f32, f32>::new(x as f32, y as f32),
+            pos: Vector2D::<i32, i32>::new(x, y),
             color: Color::new(255, 100, 100, 100),
             available_directions: vec![],
         }
     }
+
+    pub fn has_link_to(&self, other: &Cell) -> bool {
+        if let Some(dir_to_other) = match other.pos.x - self.pos.x {
+            0 => match other.pos.y - self.pos.y {
+                -1 => Some(Direction::Up),
+                1 => Some(Direction::Down),
+                _ => None,
+            },
+            -1 => match other.pos.y - self.pos.y {
+                0 => Some(Direction::Left),
+                _ => None,
+            },
+            1 => match other.pos.y - self.pos.y {
+                0 => Some(Direction::Right),
+                _ => None,
+            },
+            _ => None,
+        } {
+            self.available_directions.contains(&dir_to_other)
+                && other
+                    .available_directions
+                    .contains(&dir_to_other.opposite())
+        } else {
+            false
+        }
+    }
     pub fn color(&self) -> Color {
         self.color
+    }
+
+    pub fn pos(&self) -> Vector2D<i32, i32> {
+        self.pos
     }
 
     pub fn set_color(&mut self, color: Color) {
@@ -34,10 +64,6 @@ impl Cell {
 
     pub fn available_directions_mut(&mut self) -> &mut Vec<Direction> {
         &mut self.available_directions
-    }
-
-    pub fn set_available_directions(&mut self, available_directions: Vec<Direction>) {
-        self.available_directions = available_directions;
     }
 }
 

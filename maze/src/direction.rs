@@ -52,6 +52,7 @@ impl Direction {
         }
     }
 
+    #[allow(dead_code)]
     pub fn grid_dir_opposite(&self) -> (i32, i32) {
         self.opposite().grid_dir()
     }
