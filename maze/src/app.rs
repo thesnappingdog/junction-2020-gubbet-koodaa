@@ -34,7 +34,7 @@ fn handle_client(
             let name_str = parts[1].split_whitespace().next().unwrap();
             match action_str {
                 "connect" => {
-                    println!("try to send connect event");
+                    println!("try to send connect event {}", name_str);
                     event_loop_proxy
                         .send_event(CustomEvent::PlayerConnected(name_str.to_string()))
                         .ok();
@@ -102,9 +102,9 @@ impl App {
         let mut gui = Gui::new(&window.window(), &window.pixels());
         let mut game = MazeGame::new(maze_size, &window);
         let event_loop_proxy = event_loop.create_proxy();
+        let listener = TcpListener::bind("127.0.0.1:8080").expect("Failed to bind to address");
         // Listen player connections
         std::thread::spawn(move || loop {
-            let listener = TcpListener::bind("127.0.0.1:8080").expect("Failed to bind to address");
             for stream in listener.incoming() {
                 handle_client(stream.expect("Failed to read stream"), &event_loop_proxy);
             }
@@ -124,12 +124,13 @@ impl App {
                 }
                 self.capture_fps(&mut dt_sum, &mut frame_sum, &mut time);
             }
+            game.handle_custom_events(&event);
             if input.update(&event) {
                 if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
                     *control_flow = ControlFlow::Exit;
                     return;
                 }
-                game.handle_input(&window, &input, &event);
+                game.handle_input(&window, &input);
                 if let Some(size) = input.window_resized() {
                     window.resize(size);
                 }

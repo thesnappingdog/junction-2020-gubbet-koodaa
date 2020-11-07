@@ -170,6 +170,10 @@ impl MazeGrid {
         Vector2D::<i32, i32>::new(self.end.0, self.end.1)
     }
 
+    pub fn start_pos(&self) -> Vector2D<i32, i32> {
+        Vector2D::<i32, i32>::new(self.start.0, self.start.1)
+    }
+
     pub fn cell_at(&self, x: i32, y: i32) -> Option<&Cell> {
         if x < 0 || x >= self.size || y < 0 || y >= self.size {
             None
