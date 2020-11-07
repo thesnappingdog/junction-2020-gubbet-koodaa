@@ -26,6 +26,7 @@ pub struct Gui {
     end_game_open: bool,
     restart: bool,
     winner: String,
+    players: Vec<String>,
 }
 
 impl Gui {
@@ -69,6 +70,7 @@ impl Gui {
             end_game_open: false,
             winner: "".to_string(),
             restart: false,
+            players: vec![],
         }
     }
 
@@ -128,6 +130,18 @@ impl Gui {
                 self.restart = true;
             }
         }
+        let player_names = self.players.clone();
+        ImguiWindow::new(im_str!("Players!"))
+            .movable(false)
+            .resizable(false)
+            .collapsible(false)
+            .position([0., 20.], Condition::FirstUseEver)
+            .size([150.0, 300.0], Condition::FirstUseEver)
+            .build(&ui, || {
+                for p in player_names {
+                    ui.text_colored([0., 1.0, 0., 1.0], im_str!("{}", p));
+                }
+            });
         let mouse_cursor = ui.mouse_cursor();
         if self.last_cursor != mouse_cursor {
             self.last_cursor = mouse_cursor;
@@ -165,6 +179,7 @@ impl Gui {
             self.end_game_open = true;
             self.winner = winner;
         }
+        self.players = game.players();
     }
 }
 
