@@ -13,7 +13,7 @@ import numpy as np
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    batch_size = 30
+    batch_size = 128
     bptt = 80
 
     ntoken_embedding = None #len(TEXT.vocab.stoi) # the size of vocabulary # AMOUNT OF COMMANDS
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     nlayers = 6 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
     nhead = 8 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
-    model = TransformerModel(ntoken_embedding, embedding_size, nhead, nhid, nlayers, n_outputs=5, ready_embedding=True, dropout=0.2, batch_size=batch_size, bptt=bptt).to(device)
+    model = TransformerModel(ntoken_embedding, embedding_size, nhead, nhid, nlayers, n_outputs=30, ready_embedding=True, dropout=0.2, bptt=bptt).to(device)
 
 
     criterion = nn.CrossEntropyLoss()
@@ -52,15 +52,15 @@ if __name__ == "__main__":
             optimizer.zero_grad()
             if data.size(0) != bptt:
                 src_mask = model.generate_square_subsequent_mask(data.size(0)).to(device)
+                print("funky mask", src_mask.size())
             output = model(data, src_mask)
             #print("Pred", torch.argmax(output, dim=1))
-            output = model(data, src_mask)
             #print("Targ", targets)
             loss = criterion(output, targets)
             corr = torch.argmax(output, dim=1) == targets
             corr_len = torch.where(corr == True)[0].size()[0]
             #print("corr", corr_len, corr_len/batch_size)
-            accuracies.append(corr_len/batch_size)
+            accuracies.append(corr_len/data.size()[1])
             #print("Loss", loss.item(), "\n")
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
