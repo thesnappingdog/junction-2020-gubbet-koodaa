@@ -29,8 +29,9 @@ class FilterBankDataset(Dataset):
 
     def __getitem__(self, idx):
         file = self.data_df["path"][idx]
-        filename = "../../../"+file.split("/")[-1]
-        
+        #filename = "../../../"+file.split("/")[-1]
+        filename = file
+
         waveform, sample_rate = torchaudio.load(filename)
         
         frame_length = self.n_fft / sample_rate * 1000.0

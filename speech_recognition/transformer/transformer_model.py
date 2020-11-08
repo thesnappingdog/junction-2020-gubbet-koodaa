@@ -16,8 +16,11 @@ class TransformerModel(nn.Module):
         self.ready_embedding = ready_embedding
         if not self.ready_embedding:
             self.encoder = nn.Embedding(ntoken_embedding, embedding_size)
-            self.ninp = ninp
-        self.decoder_in = embedding_size*bptt
+            self.ninp = embedding_size
+            self.decoder_in = embedding_size
+        else:
+            self.decoder_in = embedding_size*bptt
+
         self.decoder = nn.Linear(self.decoder_in, n_outputs)
 
         self.init_weights()
@@ -37,9 +40,12 @@ class TransformerModel(nn.Module):
     def forward(self, src, src_mask):
         if not self.ready_embedding:
             src = self.encoder(src) * math.sqrt(self.ninp)
+        
+        print("src shape", src.size())
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src, src_mask)
-        output = output.view((-1, self.decoder_in))
+        #output = output.view((-1, self.decoder_in))
         #print("outp size", output.size(), self.decoder)
+        output = output.permute(1,0,2).reshape(-1, self.decoder_in)
         output = self.decoder(output)
         return output
