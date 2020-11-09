@@ -15,22 +15,20 @@ class FilterBankDataset(Dataset):
     def __init__(self, transform=None, mode="train"):
         # setting directories for data
         self.transform = transform
-        self.data_df = pd.read_csv("train_data.csv")
-        self.desired_labels = pd.read_csv("labels.csv")['0']
-        print("Labels", len(self.desired_labels))
-        #self.desired_labels = ['up', "down", "left", "right"]
+        self.data_df = pd.read_csv("reduced_data_100noise.csv")            
+        self.desired_labels = ['up', "down", "left", "right"]
+        #self.desired_labels = pd.read_csv("labels.csv")['0']
         self.labels_dict = {k: v for v, k in enumerate(self.desired_labels)}
-        print("Labels dict", self.labels_dict)
         self.n_fft = 400.0
         self.vector_size = 80
         self.mel_bins = 24
+        self.root = "/Users/juliushietala/junction_2020/tensorflow-speech-recognition-challenge/train/audio/"
     def __len__(self):
         return len(self.data_df) 
 
     def __getitem__(self, idx):
         file = self.data_df["path"][idx]
-        #filename = "../../../"+file.split("/")[-1]
-        filename = file
+        filename = self.root + file
 
         waveform, sample_rate = torchaudio.load(filename)
         
@@ -55,6 +53,7 @@ class FilterBankDataset(Dataset):
         
         
         if data.size()[0] > self.vector_size:
+            print("HAD TO CUT OBS", data.size()[0])
             data = data[:self.vector_size,:]
         else:
             base_vector = torch.zeros((self.vector_size, self.mel_bins))
@@ -63,10 +62,10 @@ class FilterBankDataset(Dataset):
             
             
         label_str = self.data_df["label"][idx]
-        #if label_str in self.desired_labels:
-        label = self.labels_dict[label_str]
-        #else:
-        #    label = 4
+        if label_str in self.desired_labels:
+            label = self.labels_dict[label_str]
+        else:
+            label = 4
 
         return data, label
 

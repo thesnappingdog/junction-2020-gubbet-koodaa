@@ -41,7 +41,6 @@ class TransformerModel(nn.Module):
         if not self.ready_embedding:
             src = self.encoder(src) * math.sqrt(self.ninp)
         
-        print("src shape", src.size())
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src, src_mask)
         #output = output.view((-1, self.decoder_in))

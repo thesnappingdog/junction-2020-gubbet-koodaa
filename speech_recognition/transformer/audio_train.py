@@ -31,10 +31,21 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-09)
     #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
 
-    dataloader = DataLoader(
-        FilterBankDataset(), 
+    full_set = FilterBankDataset()
+    print("Full set size", len(full_set))
+    train_set, eval_set = torch.utils.data.dataset.random_split(full_set,[10000, 2080])
+
+    train_loader = DataLoader(
+        train_set, 
         batch_size=batch_size,
         shuffle=True,
+        collate_fn=collate)
+
+
+    eval_loader = DataLoader(
+        eval_set, 
+        batch_size=batch_size,
+        shuffle=False,
         collate_fn=collate)
 
 
@@ -45,7 +56,8 @@ if __name__ == "__main__":
         start_time = time.time()
         src_mask = model.generate_square_subsequent_mask(bptt).to(device)
         accuracies = []
-        for i, batch in enumerate(dataloader):
+        for i, batch in enumerate(train_loader):
+            print("iter", (i+1), "of", len(train_loader))
 
             data = batch[0].to(device)
             targets = batch[1].to(device)
@@ -68,7 +80,25 @@ if __name__ == "__main__":
 
             total_loss += loss.item()
         mean_acc = np.mean(accuracies)
-        return model, mean_acc
+        return mean_acc
+
+    def evaluate(eval_model):
+        eval_model.eval() # Turn on the evaluation mode
+        accuracies = []
+        src_mask = model.generate_square_subsequent_mask(bptt).to(device)
+        with torch.no_grad():
+            for i, batch in enumerate(eval_loader):
+                data = batch[0].to(device)
+                targets = batch[1].to(device)
+                if data.size(0) != bptt:
+                    src_mask = model.generate_square_subsequent_mask(data.size(0)).to(device)
+                output = eval_model(data, src_mask)
+                loss = criterion(output, targets)
+                corr = torch.argmax(output, dim=1) == targets
+                corr_len = torch.where(corr == True)[0].size()[0]
+                accuracies.append(corr_len/data.size()[1])
+        mean_acc = np.mean(accuracies)
+        return mean_acc
 
     best_accuracy= -float("inf")
     epochs = 1000 # The number of epochs
@@ -77,11 +107,13 @@ if __name__ == "__main__":
     for epoch in range(1, epochs + 1):
         print("EPOCH", epoch)
         epoch_start_time = time.time()
-        model, mean_acc = train()
-        print("Mean accuracy", mean_acc)
-        if mean_acc > best_accuracy:
-            torch.save(model.state_dict(), "best_model.mdl")
+        mean_acc_train = train()
+        print("Mean train accuracy", mean_acc_train)
+        mean_acc_eval = evaluate(model)
+        print("Mean eval accuracy", mean_acc_eval)
+        if mean_acc_eval > best_accuracy:
+            torch.save(model.state_dict(), "best_model_eval_100noise.mdl")
             print("Saved model")
-            best_accuracy = mean_acc
+            best_accuracy = mean_acc_eval
 
         #scheduler.step()
