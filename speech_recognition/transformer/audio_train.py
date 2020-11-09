@@ -30,8 +30,9 @@ if __name__ == "__main__":
     #optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-09)
     #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
-
-    full_set = FilterBankDataset()
+    fname = "reduced_data_100noise.csv"
+    root = "/Users/juliushietala/junction_2020/tensorflow-speech-recognition-challenge/train/audio/"
+    full_set = FilterBankDataset(fname,root)
     print("Full set size", len(full_set))
     train_set, eval_set = torch.utils.data.dataset.random_split(full_set,[10000, 2080])
 

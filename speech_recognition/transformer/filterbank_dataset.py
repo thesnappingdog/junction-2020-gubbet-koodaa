@@ -12,17 +12,17 @@ import torchaudio
 
 
 class FilterBankDataset(Dataset):
-    def __init__(self, transform=None, mode="train"):
+    def __init__(self, filename, root, transform=None, mode="train"):
         # setting directories for data
         self.transform = transform
-        self.data_df = pd.read_csv("reduced_data_100noise.csv")            
+        self.data_df = pd.read_csv(filename)            
         self.desired_labels = ['up', "down", "left", "right"]
         #self.desired_labels = pd.read_csv("labels.csv")['0']
         self.labels_dict = {k: v for v, k in enumerate(self.desired_labels)}
         self.n_fft = 400.0
         self.vector_size = 80
         self.mel_bins = 24
-        self.root = "/Users/juliushietala/junction_2020/tensorflow-speech-recognition-challenge/train/audio/"
+        self.root = root
     def __len__(self):
         return len(self.data_df) 
 
