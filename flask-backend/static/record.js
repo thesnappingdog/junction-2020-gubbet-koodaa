@@ -1,6 +1,17 @@
+// Basic WebSocket Connection
+
+let socket = new WebSocket("ws://127.0.0.1:3012");
+
+socket.onopen = function(e) {
+    console.log('Battle cruiser operational');
+    socket.send("Battle cruiser operational");
+    console.log(e)
+};
+
 let id = val => document.getElementById(val),
     start = id('start-recording'),
     stop = id('stop-recording'),
+    player_id,
     stream,
     recorder,
     recordedChunks = [],
@@ -19,12 +30,20 @@ start.onclick = function() {
         stream = _stream;
         console.log(stream.getAudioTracks());
 
+        let player_id = 6;
+
         // Docs: https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder
         recorder = new MediaRecorder(stream);
-        recorder.ondataavailable = e => {
-            // ToDo: Push chunk over websocket to be analyzed on backend
-            console.log("got " + chunkTimesliceMillis + "ms chunk of data");
-            recordedChunks.push(e.data);
+        recorder.ondataavailable = event => {
+            // event.data type is `Blob`
+            // Docs: https://developer.mozilla.org/en-US/docs/Web/API/Blob
+            if (!player_id) {
+                console.log("No player ID received from backend, not sending audio chunks");
+            } else {
+                // Create new blob with first byte indicating player ID
+                let blob_with_player_id = new Blob([6 + event.data]);
+                socket.send(blob_with_player_id);
+            }
         };
         recorder.start(chunkTimesliceMillis);
     })
