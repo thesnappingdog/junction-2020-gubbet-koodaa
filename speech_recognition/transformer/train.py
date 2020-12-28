@@ -26,13 +26,13 @@ if __name__ == "__main__":
         data = data.view(bsz, -1).t().contiguous()
         return data.to(device)
 
-    batch_size = 4
+    batch_size = 20
     eval_batch_size = 10
     train_data = batchify(train_txt, batch_size)
     val_data = batchify(val_txt, eval_batch_size)
     test_data = batchify(test_txt, eval_batch_size)
 
-    bptt = 2
+    bptt = 35
     def get_batch(source, i):
         seq_len = min(bptt, len(source) - 1 - i)
         data = source[i:i+seq_len]
@@ -46,7 +46,8 @@ if __name__ == "__main__":
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
     nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
-    model = TransformerModel(ntokens, emsize, nhead, nhid, nlayers, dropout).to(device)
+
+    model = TransformerModel(ntokens, emsize, nhead, nhid, nlayers, n_outputs=ntokens, dropout=dropout).to(device)
 
 
     criterion = nn.CrossEntropyLoss()
@@ -63,6 +64,7 @@ if __name__ == "__main__":
         src_mask = model.generate_square_subsequent_mask(bptt).to(device)
         for batch, i in enumerate(range(0, train_data.size(0) - 1, bptt)):
             data, targets = get_batch(train_data, i)
+
             print("data, targ size", data.size(), targets.size())
             #print("data, targ", data, targets)
             optimizer.zero_grad()
@@ -70,6 +72,7 @@ if __name__ == "__main__":
                 print("mask mask")
                 src_mask = model.generate_square_subsequent_mask(data.size(0)).to(device)
             output = model(data, src_mask)
+            print("outp shjappe", output.size())
             loss = criterion(output.view(-1, ntokens), targets)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
