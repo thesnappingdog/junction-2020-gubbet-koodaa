@@ -4,19 +4,13 @@ from twisted.web.server import Site
 from twisted.web.static import File
 from autobahn.twisted.websocket import listenWS
 
-from server import ServerFactory, ServerProtocol
+from server import ServerFactory, ServerProtocol, send_maze
 from player_command import PlayerCommand
 from player_map import PlayerMap
+from audio_control.controller import audio_controller
 
 global PLAYER_MAP
 PLAYER_MAP = PlayerMap()
-
-def send_maze(event):
-    print(event)
-    maze_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    maze_socket.connect(('localhost', 8080))
-    maze_socket.send(bytes(event, 'utf-8'))
-    maze_socket.close()
 
 def run():
     # Websocket server
@@ -27,6 +21,10 @@ def run():
     factory.onUnregister = handleUnregister
     factory.onTextMessage = handleTextMessage
     factory.onBinaryMessage = handleBinaryMessage
+
+    #Audio controller
+    audio_controller()
+
     listenWS(factory)
 
     # Optional HTTP server
@@ -34,6 +32,7 @@ def run():
     web = Site(webdir)
     reactor.listenTCP(80, web)
     reactor.run()
+
 
 # Handler functions
 
@@ -54,7 +53,7 @@ def handleBinaryMessage(peer, payload, factory):
     
     print(f"[{name}] >> ({len(payload)} bytes of data)")
 
-    # ToDo: Send audio bytes to Julle's amazing AI backend
+    # ToDo: Use this instead of short circuited controller
     command = None
     if command == None:
         return
