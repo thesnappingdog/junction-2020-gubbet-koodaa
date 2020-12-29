@@ -1,2 +1,6 @@
 twisted
 autobahn
+torch
+torchaudio
+sounddevice
+numpy
