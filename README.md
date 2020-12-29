@@ -2,6 +2,7 @@
 
 ![alt text](https://github.com/hietalajulius/junction-2020/blob/main/cover.png)
 ### Running the code:
+Run below steps in separate terminal windows
 
 #### Game backend
 1. [Install rust](https://www.rust-lang.org/tools/install)
